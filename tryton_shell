@@ -46,17 +46,18 @@ class TrytondHelper:
         """Call it after creating an instance to setup tryton for use"""
         Pool.start()
         pool = Pool(self._db_name)
-        Cache.clean(self._db_name)
+
         self._pool = pool
         _db_name = self._db_name
         # Instantiate the pool
         with Transaction().start(_db_name, 0, context=self._context):
+            Cache.clean(_db_name)
             pool.init()
         # User 0 is root user. We use it to get the admin id:
         with Transaction().start(_db_name, 0, context=self._context):
             user_obj = pool.get('res.user')
             self._admin, = user_obj.search([('login', '=', 'admin')], limit=1)
-        Cache.resets(_db_name)
+            Cache.resets(_db_name)
         return self
 
     def pool(self):
@@ -90,10 +91,8 @@ TRYTOND_CONFIG_PATH, TRYTOND_DATABASE_NAME = parse_args()
 print "Loading CONFIG file: '%s'" % TRYTOND_CONFIG_PATH
 print "Database: '%s'" % TRYTOND_DATABASE_NAME
 
-from trytond.config import CONFIG
-CONFIG.update_etc(TRYTOND_CONFIG_PATH)
-if hasattr(CONFIG, 'set_timezone'):
-    CONFIG.set_timezone()
+from trytond.config import config
+config.update_etc(TRYTOND_CONFIG_PATH)
 from trytond.cache import Cache
 from trytond.pool import Pool
 from trytond.transaction import Transaction
@@ -120,6 +119,9 @@ def begin_transaction(readonly=True, username=None):
         user = TRYTOND_HELPER.admin()
     else:
         user = TRYTOND_HELPER.user(username)
+    print "Starting new `%s` transaction for user `%s`" % (
+        'readonly' if readonly else 'readwrite', user
+    )
     Transaction().start(
         TRYTOND_DATABASE_NAME, user,
         readonly=readonly, context={}
