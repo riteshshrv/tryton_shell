@@ -106,6 +106,36 @@ readline.parse_and_bind("tab: complete")
 TRYTOND_HELPER = TrytondHelper(TRYTOND_CONFIG_PATH, TRYTOND_DATABASE_NAME)
 
 
+def isolate(func):
+    def inner(*args, **kwargs):
+        begin_transaction(readonly=False)
+        func(*args, **kwargs)
+        end_transaction(commit=True)
+    return inner
+
+
+@isolate
+def pending_upgrade():
+    pool = Pool()
+    Module = pool.get('ir.module.module')
+    Lang = pool.get('ir.lang')
+    with Transaction().new_cursor() as transaction:
+        modules = Module.search([
+            ('state', 'in', ['to upgrade', 'to remove', 'to install']),
+            ])
+        update = [m.name for m in modules]
+        langs = Lang.search([
+            ('translatable', '=', True),
+            ])
+        lang = [x.code for x in langs]
+        transaction.cursor.commit()
+    if update:
+        print "Upgrading:", ",".join(update)
+        pool.init(update=update, lang=lang)
+        print "Upgrade complete :)"
+
+
+@isolate
 def change_password(user, password):
     User = Pool().get('res.user')
     user, = User.search([('login', '=', user)])
