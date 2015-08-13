@@ -109,9 +109,36 @@ TRYTOND_HELPER = TrytondHelper(TRYTOND_CONFIG_PATH, TRYTOND_DATABASE_NAME)
 def isolate(func):
     def inner(*args, **kwargs):
         begin_transaction(readonly=False)
-        func(*args, **kwargs)
-        end_transaction(commit=True)
+        try:
+            func(*args, **kwargs)
+        finally:
+            end_transaction(commit=True)
     return inner
+
+
+@isolate
+def update_module(module, *args):
+    pool = Pool()
+    Module = pool.get("ir.module.module")
+
+    to_install = []
+    to_upgrade = []
+    module_names = (module,) + args
+    for name in module_names:
+        try:
+            module, = Module.search([('name', '=', name)])
+        except:
+            raise Exception('%s module not found' % name)
+        else:
+            if module.state == 'uninstalled':
+                to_install.append(module)
+            elif module.state == 'installed':
+                to_upgrade.append(module)
+            else:
+                raise Exception('Unknown state')
+
+    Module.install(to_install)
+    Module.upgrade(to_upgrade)
 
 
 @isolate
@@ -133,6 +160,12 @@ def pending_upgrade():
         print "Upgrading:", ",".join(update)
         pool.init(update=update, lang=lang)
         print "Upgrade complete :)"
+
+
+def install_upgrade(*args):
+    "wrapper around"
+    update_module(*args)
+    pending_upgrade()
 
 
 @isolate
