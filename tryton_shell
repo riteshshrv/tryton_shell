@@ -79,12 +79,12 @@ class TrytondHelper:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', default="/etc/trytond.conf",
-                            help='Tryton config file.')
-    parser.add_argument('-d', '--database', required=True,
-                            help='Tryton database.')
+    parser.add_argument(
+        '-c', '--config', default="/etc/trytond.conf",
+        help='Tryton config file.')
+    parser.add_argument('-d', '--database', help='Tryton database.')
     args = parser.parse_args()
-    return (args.config, args.database)
+    return (args.config, args.database or os.environ.get('DB_NAME'))
 
 
 TRYTOND_CONFIG_PATH, TRYTOND_DATABASE_NAME = parse_args()
