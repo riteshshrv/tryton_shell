@@ -117,7 +117,7 @@ def isolate(func):
 
 
 @isolate
-def update_module(module, *args):
+def _update_module(module, *args):
     pool = Pool()
     Module = pool.get("ir.module.module")
 
@@ -134,15 +134,17 @@ def update_module(module, *args):
                 to_install.append(module)
             elif module.state == 'installed':
                 to_upgrade.append(module)
+            elif module.state in ['to upgrade', 'to install']:
+                pass
             else:
-                raise Exception('Unknown state')
+                raise Exception('Unknown state "%s"' % module.state)
 
     Module.install(to_install)
     Module.upgrade(to_upgrade)
 
 
 @isolate
-def pending_upgrade():
+def _pending_upgrade():
     pool = Pool()
     Module = pool.get('ir.module.module')
     Lang = pool.get('ir.lang')
@@ -164,8 +166,8 @@ def pending_upgrade():
 
 def install_upgrade(*args):
     "wrapper around"
-    update_module(*args)
-    pending_upgrade()
+    _update_module(*args)
+    _pending_upgrade()
 
 
 @isolate
