@@ -20,7 +20,7 @@
     @author   Vishesh Yadav, Tarun Bhardwaj
     @license  FreeBSD Licence
 """
-
+import logging
 import argparse
 import distutils.sysconfig
 import readline
@@ -159,9 +159,11 @@ def _pending_upgrade():
         lang = [x.code for x in langs]
         transaction.cursor.commit()
     if update:
-        print "Upgrading:", ",".join(update)
+        print "Upgrading: %s \n" % ",".join(update)
+        logger = logging.getLogger('pool')
+        logger.setLevel(logging.INFO)
         pool.init(update=update, lang=lang)
-        print "Upgrade complete :)"
+        print "\nUpgrade complete :)"
 
 
 def install_upgrade(*args):
