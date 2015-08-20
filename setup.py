@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='tryton_shell',
-    version='3.4.4',
+    version='3.4.5',
     description='Interactive Shell for Tryton',
     author='Tarun Bhardwaj, Vishesh Yadav',
     author_email='tarun.bhardwaj@openlabs.co.in',
