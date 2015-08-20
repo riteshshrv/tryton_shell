@@ -71,7 +71,9 @@ class TrytondHelper:
 
     def user(self, username):
         result = None
-        with Transaction().start(self._db_name, 0, context=self._context):
+        context = self._context.copy()
+        context['active_test'] = False
+        with Transaction().start(self._db_name, 0, context=context):
             User = self._pool.get('res.user')
             result = User.search([('login', '=', username)], limit=1)[0].id
         return result
