@@ -6,6 +6,7 @@
     arguments:
       --config CONFIG      Tryton config file.
       --database DATABASE  Tryton database.
+      --ipython            Use IPython InteractiveConsole
 
 
     Currently we just load the config and setup pool for one database. The
@@ -17,7 +18,7 @@
         __tryton_database: Name of the tryton database initialized in pool
         __tryton_admin   : ID of admin user
 
-    @author   Vishesh Yadav, Tarun Bhardwaj
+    @author   Vishesh Yadav, Tarun Bhardwaj, Ritesh Shrivastav
     @license  FreeBSD Licence
 """
 import logging
@@ -85,11 +86,23 @@ def parse_args():
         '-c', '--config', default="/etc/trytond.conf",
         help='Tryton config file.')
     parser.add_argument('-d', '--database', help='Tryton database.')
+    parser.add_argument(
+        '-i', '--ipython', action='store_true',
+        help='Use IPython InteractiveShell')
     args = parser.parse_args()
-    return (args.config, args.database or os.environ.get('DB_NAME'))
+
+    # Show warning if IPython is not installed
+    if args.ipython:
+        try:
+            import IPython
+        except ImportError:
+            print "\033[91m IPython is not installed. \033[0m"
+            args.ipython = False
+
+    return (args.config, args.database or os.environ.get('DB_NAME'), args.ipython)
 
 
-TRYTOND_CONFIG_PATH, TRYTOND_DATABASE_NAME = parse_args()
+TRYTOND_CONFIG_PATH, TRYTOND_DATABASE_NAME, USE_IPYTHON = parse_args()
 print "Loading CONFIG file: '%s'" % TRYTOND_CONFIG_PATH
 print "Database: '%s'" % TRYTOND_DATABASE_NAME
 
@@ -214,5 +227,9 @@ vars.update(locals())
 vars.update(globals())
 readline.parse_and_bind("tab: complete")
 
-shell = code.InteractiveConsole(vars)
-shell.interact()
+if USE_IPYTHON:
+    import IPython
+    IPython.embed()
+else:
+    shell = code.InteractiveConsole(vars)
+    shell.interact()

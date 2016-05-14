@@ -15,7 +15,10 @@ After setting environment variable `DB_NAME`, `TRYTOND_DATABASE_URI`
 
 `tryton_shell`
 
-should do the job.
+should do the job and if you prefer using `IPython's Shell` then
+
+`tryton_shell -i` or `tryton_shell --ipython`
+
 
 ### Inside `tryton_shell`
 
